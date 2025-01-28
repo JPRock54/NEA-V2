@@ -4,32 +4,36 @@ from dotenv import load_dotenv
 
 # SQL Class
 class SQL:
+    # Initatlises the database connection and creats the database if it doesn't exist
     def __init__(self):
         load_dotenv()
-        self.connector = connector.connect(
+        self.connection = connector.connect(
             host=getenv("HOST"),
-            user=getenv("USER"),
-            password=getenv("PASSWORD"),
-            database=getenv("DB")
+            user="root",
+            password=getenv("PASSWORD")
             )
         self.cursor = self.connection.cursor()
-    
+        self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {getenv("DB")}")
+        self.connection.database = getenv("DB")
+
     def close(self):
-        if self.connector:
-            self.connector.close()
+        self.cursor.close()
     
     def create(self, statement : str):
+        self.cursor = self.connection.cursor()
         self.cursor.execute(statement)
-        self.cursor.commit()
+        self.connection.commit()
         self.close()
 
     def getData(self, statement : str, values : tuple|list = []):
+        self.cursor = self.connection.cursor()
         self.cursor.execute(statement, values)
         data = self.cursor.fetchall()
         self.close()
         return data
 
     def manipulateData(self, statement : str, values : tuple|list = []):
+        self.cursor = self.connection.cursor()
         self.cursor.execute(statement, values)
         self.connection.commit()
         self.close()
