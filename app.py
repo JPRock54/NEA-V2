@@ -36,15 +36,12 @@ def checkUsername(username):
     return 1
 
 # Returns 1 if the user is an admin, 0 if otherwise
-def checkAdmin():
-    pass
+def checkRole(username):
+    role = db.getData("SELECT roleName FROM roles WHERE roleID = (SELECT roleID FROM users WHERE username = %s)", (username,))
+    return role
 
 # Check that a field exists in a database
 def checkFieldExists():
-    pass
-
-# Checks if the user of a specific username exists
-def checkUserExists():
     pass
 
 # Creates an account with a username and a hashed password
@@ -65,20 +62,36 @@ def createaccount():
 @app.route("/generatesession", methods=["POST"])
 def generatesession():
     username = request.json.get("username")
+    if not checkUsername(username):
+        return jsonify({"success":False, "message":"username does not exist"})
+    
     password = request.json.get("password")
+    salt = db.getData("SELECT salt FROM users WHERE username=(%s)", (username,))[0][0]
+    hash1 = passwordHashing(password, salt)
+    if hash1 != db.getData("SELECT hashedPassword FROM users where username=(%s)", (username, ))[0][0]:
+        return jsonify({"success": False, "message":"incorrect password"})
 
-    return jsonify({"message":db.getData("SELECT salt FROM users WHERE username=(%s)", (username,))})
+    return jsonify({"success":True, "message":"success"})
 
 
 # Updates the password within the database
 @app.route("/updatepassword", methods=["POST"])
 def updatepassword():
-    pass
+    username = request.json.get("username")
+    role = checkRole(username)
+    print(role)
+    return jsonify({"message":role})
 
 # Allows an admin to assign another user as an admin
 @app.route("/admin/assignadmin", methods=["POST"])
-def assignadmin():
-    pass
+def assignadmin(username):
+    role = checkRole(username)
+    if role != "Admin":
+        return jsonify({"success":False, "message":"account is not an admin"})
+    if not checkUsername(username):
+        return jsonify({"success":False, "message":"username does not exist"})
+    db.manipulateData("UPDATE users SET roleID = %s WHERE username = %s", (1, username,))
+    return jsonify({"success":True, "message":"success"})
 
 # Main function to run the program
 def main():
