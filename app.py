@@ -11,7 +11,7 @@ app = Flask(__name__)
 db = SQL()
 
 # Generates a set of random characters of a set size
-def generateSalt(size):
+def generateRandomString(size):
     characters = ascii_letters + digits + punctuation
     salt = []
     for i in range(0, size):
@@ -53,9 +53,9 @@ def createaccount():
         return jsonify({"message":"username already exists"})
 
     password = request.json.get("password")
-    salt1 = generateSalt(32)
+    salt1 = generateRandomString(32)
     hashedPassword = passwordHashing(password, salt1)
-    db.manipulateData("INSERT INTO users (username, hashedPassword, salt) VALUES (%s, %s, %s)", (username, hashedPassword, salt1,))
+    db.manipulateData("INSERT INTO users (username, hashedPassword, salt, roleID) VALUES (%s, %s, %s, %s)", (username, hashedPassword, salt1, 0,))
     return jsonify({"message":"success"})
 
 # Checks the username and password against values in database and gives a session id if succesfull
@@ -71,6 +71,12 @@ def generatesession():
     if hash1 != db.getData("SELECT hashedPassword FROM users where username=(%s)", (username, ))[0][0]:
         return jsonify({"success": False, "message":"incorrect password"})
 
+    userID = db.getData("SELECT userID FROM users WHERE username = %s", (username,))[0][0]
+    sessionID = generateRandomString(64)
+    startDate = datetime.now()
+    endDate = startDate + timedelta(days=1)
+    db.manipulateData("INSERT INTO sessions (sessionID, userID, startDate, endDate) VALUES (%s, %s, %s, %s)", (sessionID, userID, startDate, endDate,))
+    
     return jsonify({"success":True, "message":"success"})
 
 

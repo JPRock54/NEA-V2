@@ -25,9 +25,9 @@ def createTable(tableName : str, fields : str):
 
 # Main function to run the program
 def main():
-    createTable("users", "userID INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL, hashedPassword VARCHAR(255) NOT NULL, salt VARCHAR(255) NOT NULL, roleID TINYINT(1) DEFAULT 0 NOT NULL")
-    createTable("sessions", "sessionID INT AUTO_INCREMENT PRIMARY KEY, userID INT NOT NULL, startDate DATETIME NOT NULL, endDate DATETIME NOT NULL, FOREIGN KEY (userID) REFERENCES users(userID)")
-    createTable("roles", "roleID INT PRIMARY KEY, roleName VARCHAR(255) NOT NULL, FOREIGN KEY (roleID) REFERENCES users(userID)")
+    createTable("roles", "roleID INT PRIMARY KEY, roleName VARCHAR(255) NOT NULL")
+    createTable("users", "userID INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL, hashedPassword VARCHAR(255) NOT NULL, salt VARCHAR(255) NOT NULL, roleID INT NOT NULL, FOREIGN KEY (roleID) REFERENCES roles(roleID)")
+    createTable("sessions", "sessionID VARCHAR(255) PRIMARY KEY, userID INT NOT NULL, startDate DATETIME NOT NULL, endDate DATETIME NOT NULL, FOREIGN KEY (userID) REFERENCES users(userID)")
     db.manipulateData("INSERT INTO roles (roleID, roleName) VALUES (%s, %s)", (0, "User"))
     db.manipulateData("INSERT INTO roles (roleID, roleName) VALUES (%s, %s)", (1, "Admin"))
 
