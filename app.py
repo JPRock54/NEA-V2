@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from hashlib import sha512
 from random import choice
 from string import ascii_letters, digits, punctuation
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from SQL import SQL
 
 # Creates 
@@ -11,12 +11,14 @@ app = Flask(__name__)
 db = SQL()
 
 # Generates a set of random characters of a set size
-def generateRandomString(size):
-    characters = ascii_letters + digits + punctuation
-    salt = []
+def generateRandomString(size, specialCharacters=True):
+    characters = ascii_letters + digits
+    if specialCharacters:
+        characters += punctuation
+    randomString = []
     for i in range(0, size):
-        salt.append(choice(characters))
-    return ''.join(salt)
+        randomString.append(choice(characters))
+    return ''.join(randomString)
 
 # Hashes the password and the salt in sha512 format
 def passwordHashing(password, salt):
@@ -25,9 +27,17 @@ def passwordHashing(password, salt):
     return hash1.hexdigest()
 
 # Checks is the session is valid
-def verifySession():
-    pass
-
+def verifySession(sessionID):
+    session = db.getData("SELECT sessionID, endDate FROM sessions WHERE sessionID = %s", (sessionID,))
+    if session == []:
+        return False
+    sessionID = session[0][0]
+    endDate = session[0][1]
+    if datetime.now() > endDate:
+        db.manipulateData("DELETE FROM sessions WHERE sessionID = %s", (sessionID,))
+        return False
+    return True
+    
 # Returns 1 if the username exists, 0 if otherwise
 def checkUsername(username):
     username = db.getData("SELECT * FROM users WHERE username = %s", (username, ))
@@ -35,7 +45,7 @@ def checkUsername(username):
         return 0
     return 1
 
-# Returns 1 if the user is an admin, 0 if otherwise
+# Returns the role of the user
 def checkRole(username):
     role = db.getData("SELECT roleName FROM roles WHERE roleID = (SELECT roleID FROM users WHERE username = %s)", (username,))
     return role
@@ -48,15 +58,14 @@ def checkFieldExists():
 @app.route("/createaccount", methods=["POST"])
 def createaccount():
     username = request.json.get("username")
-
     if checkUsername(username):
-        return jsonify({"message":"username already exists"})
+        return jsonify({"success":False, "message":"username already exists"})
 
     password = request.json.get("password")
     salt1 = generateRandomString(32)
     hashedPassword = passwordHashing(password, salt1)
     db.manipulateData("INSERT INTO users (username, hashedPassword, salt, roleID) VALUES (%s, %s, %s, %s)", (username, hashedPassword, salt1, 0,))
-    return jsonify({"message":"success"})
+    return jsonify({"success":True, "message":"account created"})
 
 # Checks the username and password against values in database and gives a session id if succesfull
 @app.route("/generatesession", methods=["POST"])
@@ -65,6 +74,8 @@ def generatesession():
     if not checkUsername(username):
         return jsonify({"success":False, "message":"username does not exist"})
     
+    db.manipulateData("DELETE FROM sessions WHERE userID = (SELECT userID FROM users WHERE username = %s)", (username,))
+
     password = request.json.get("password")
     salt = db.getData("SELECT salt FROM users WHERE username=(%s)", (username,))[0][0]
     hash1 = passwordHashing(password, salt)
@@ -72,7 +83,7 @@ def generatesession():
         return jsonify({"success": False, "message":"incorrect password"})
 
     userID = db.getData("SELECT userID FROM users WHERE username = %s", (username,))[0][0]
-    sessionID = generateRandomString(64)
+    sessionID = generateRandomString(64, False)
     startDate = datetime.now()
     endDate = startDate + timedelta(days=1)
     db.manipulateData("INSERT INTO sessions (sessionID, userID, startDate, endDate) VALUES (%s, %s, %s, %s)", (sessionID, userID, startDate, endDate,))
@@ -83,10 +94,15 @@ def generatesession():
 # Updates the password within the database
 @app.route("/updatepassword", methods=["POST"])
 def updatepassword():
+    """
     username = request.json.get("username")
     role = checkRole(username)
     print(role)
     return jsonify({"message":role})
+    """
+    session = request.json.get("sessionID")
+    print(verifySession(session))
+    
 
 # Allows an admin to assign another user as an admin
 @app.route("/admin/assignadmin", methods=["POST"])
@@ -101,7 +117,6 @@ def assignadmin(username):
 
 # Main function to run the program
 def main():
-    print(passwordHashing("sdfsdfsdf", "sdfsdf"))
     app.run(debug=True)
 
 
