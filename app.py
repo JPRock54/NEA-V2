@@ -38,12 +38,25 @@ def verifySession(sessionID):
         return False
     return True
     
-# Returns 1 if the username exists, 0 if otherwise
+# Returns True if the username exists, False if otherwise
 def checkUsername(username):
     username = db.getData("SELECT * FROM users WHERE username = %s", (username, ))
     if username == []:
-        return 0
-    return 1
+        return False
+    return True
+
+# Returns True if the password is correct, False if otherwise
+def checkPassword(username, password):
+    if not checkUsername(username):
+        return False
+
+    salt = db.getData("SELECT salt FROM users WHERE username = %s", (username,))[0][0]
+    hashed_password = passwordHashing(password, salt)
+    if hashed_password != db.getData("SELECT hashedPassword FROM users WHERE username = %s", (username,))[0][0]:
+        return False
+    
+    return True
+    
 
 # Returns the role of the user
 def checkRole(username):
@@ -74,13 +87,11 @@ def generatesession():
     if not checkUsername(username):
         return jsonify({"success":False, "message":"username does not exist"})
     
-    db.manipulateData("DELETE FROM sessions WHERE userID = (SELECT userID FROM users WHERE username = %s)", (username,))
-
     password = request.json.get("password")
-    salt = db.getData("SELECT salt FROM users WHERE username=(%s)", (username,))[0][0]
-    hash1 = passwordHashing(password, salt)
-    if hash1 != db.getData("SELECT hashedPassword FROM users where username=(%s)", (username, ))[0][0]:
-        return jsonify({"success": False, "message":"incorrect password"})
+    if not checkPassword(username, password):
+        return jsonify({"success":False, "message":"incorrect password"})
+
+    db.manipulateData("DELETE FROM sessions WHERE userID = (SELECT userID FROM users WHERE username = %s)", (username,))
 
     userID = db.getData("SELECT userID FROM users WHERE username = %s", (username,))[0][0]
     sessionID = generateRandomString(64, False)
@@ -94,22 +105,38 @@ def generatesession():
 # Updates the password within the database
 @app.route("/updatepassword", methods=["POST"])
 def updatepassword():
-    """
-    username = request.json.get("username")
-    role = checkRole(username)
-    print(role)
-    return jsonify({"message":role})
-    """
+    # Gets the current sessionID and checks it against the database
     session = request.json.get("sessionID")
-    print(verifySession(session))
+    if not verifySession(session):
+        return jsonify({"success":False, "message":"invalid session"})
+    
+    # Finds the current username from the sessionID and checks if the user entered password matches their current password
+    username = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
+    currentPassword = request.json.get("currentPassword")
+    if not checkPassword(username, currentPassword):
+        return jsonify({"success":False, "message":"incorrect current password"})
+    
+    # Takes the new password from the user and updates it in the database
+    newPassword = request.json.get("newPassword")
+    salt = db.getData("SELECT salt FROM users WHERE username = %s", (username,))[0][0]
+    hashedNewPassword = passwordHashing(newPassword, salt)
+    db.manipulateData("UPDATE users SET hashedPassword = %s WHERE username = %s", (hashedNewPassword, username))
+    return jsonify({"success":True, "message":"password changed"})
     
 
 # Allows an admin to assign another user as an admin
 @app.route("/admin/assignadmin", methods=["POST"])
-def assignadmin(username):
+def assignadmin():
+    # Gets the users username based on their current sessionID
+    session = request.json.get("sessionID")
+    username = db.getData("SELECT username FROM users WHERE session")
+
+
+    # Checks if the current users role is an admin
     role = checkRole(username)
     if role != "Admin":
         return jsonify({"success":False, "message":"account is not an admin"})
+    
     if not checkUsername(username):
         return jsonify({"success":False, "message":"username does not exist"})
     db.manipulateData("UPDATE users SET roleID = %s WHERE username = %s", (1, username,))
