@@ -8,13 +8,13 @@ class SQL:
     def __init__(self):
         load_dotenv()
         self.connection = connector.connect(
-            host=getenv("HOST"),
-            user="root",
-            password=getenv("PASSWORD")
+            host=getenv("DB_HOST"),
+            user=getenv("DB_USER"),
+            password=getenv("DB_PASSWORD")
             )
         self.cursor = self.connection.cursor()
         self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {getenv("DB")}")
-        self.connection.database = getenv("DB")
+        self.connection.database = getenv("DB_NAME")
 
     def close(self):
         self.cursor.close()
