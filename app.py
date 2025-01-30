@@ -14,12 +14,16 @@ db = SQL()
 
 # Generates a set of random characters of a set size
 def generateRandomString(size, specialCharacters=True):
+    # Defines the characters list, with or without special characters
     characters = ascii_letters + digits
     if specialCharacters:
         characters += punctuation
+    
+    # Appends characters to the randomString list for the set size
     randomString = []
     for i in range(0, size):
         randomString.append(choice(characters))
+    
     return ''.join(randomString)
 
 # Hashes the password and the salt in sha512 format, then rehashes it a set number of times
@@ -54,19 +58,23 @@ def verifySession(sessionID):
     
 # Returns True if the username exists, False if otherwise
 def checkUsername(username):
+    # Gets the username from the database and checks if its empty
     username = db.getData("SELECT * FROM users WHERE username = %s", (username, ))
     if username == []:
         return False
+    
     return True
 
 # Returns True if the password is correct, False if otherwise
 def checkPassword(username, password):
+    # Checks if the username exists
     if not checkUsername(username):
         return False
 
+    # Compares the hashedPassword against the one in the database, returns False if they are not the same
     salt = db.getData("SELECT salt FROM users WHERE username = %s", (username,))[0][0]
-    hashed_password = passwordHashing(password, 20, salt)
-    if hashed_password != db.getData("SELECT hashedPassword FROM users WHERE username = %s", (username,))[0][0]:
+    hashePassword = passwordHashing(password, 20, salt)
+    if hashePassword != db.getData("SELECT hashedPassword FROM users WHERE username = %s", (username,))[0][0]:
         return False
     
     return True
@@ -174,6 +182,6 @@ def assignadmin():
 def main():
     app.run(debug=True)
 
-
+# Runs the program
 if __name__ == "__main__":
     main()
