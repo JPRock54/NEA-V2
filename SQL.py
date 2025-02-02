@@ -13,8 +13,9 @@ class SQL:
             password=getenv("DB_PASSWORD")
             )
         self.cursor = self.connection.cursor()
-        self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {getenv("DB")}")
+        self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {getenv("DB_NAME")}")
         self.connection.database = getenv("DB_NAME")
+        self.cursor.close()
 
     def close(self):
         self.cursor.close()

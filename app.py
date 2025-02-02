@@ -1,5 +1,6 @@
 # Imports
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from hashlib import sha512
 from random import choice
 from string import ascii_letters, digits, punctuation
@@ -8,6 +9,7 @@ from SQL import SQL
 
 # Creates the flask application 
 app = Flask(__name__)
+CORS(app)
 
 # Creates the db object based on the SQL class
 db = SQL()
