@@ -98,16 +98,15 @@ def createaccount():
     # Gets their username and check if it already exists in the database
     username = request.json.get("username")
     if checkUsername(username):
-        return jsonify({"success":False, "message":"username already exists"})
+        return jsonify({"success":False, "message":"Username already exists!"})
 
     # Gets their password, hashes it and adds it to the database
     password = request.json.get("password")
     salt1 = generateRandomString(32)
     hashedPassword = passwordHashing(password, 20, salt1)
-    print(passwordHashing(password, 20, salt1))
     db.manipulateData("INSERT INTO users (username, hashedPassword, salt, roleID) VALUES (%s, %s, %s, %s)", (username, hashedPassword, salt1, 0,))
     
-    return jsonify({"success":True, "message":"account created"})
+    return jsonify({"success":True, "message":"Account Created!"})
 
 # Checks the username and password against values in database and gives a session id if succesfull
 @app.route("/generatesession", methods=["POST"])
@@ -115,12 +114,12 @@ def generatesession():
     # Checks their username exists
     username = request.json.get("username")
     if not checkUsername(username):
-        return jsonify({"success":False, "message":"username does not exist"})
+        return jsonify({"success":False, "message":"Incorrect username/password"})
     
     # Checks if their password is correct
     password = request.json.get("password")
     if not checkPassword(username, password):
-        return jsonify({"success":False, "message":"incorrect password"})
+        return jsonify({"success":False, "message":"Incorrect username/password"})
 
     # Deletes all current sessions 
     db.manipulateData("DELETE FROM sessions WHERE userID = (SELECT userID FROM users WHERE username = %s)", (username,))
@@ -170,7 +169,6 @@ def assignadmin():
     # Checks if the current users role is an admin
     role = checkRole(adminUsername)
     if role != "Admin":
-        print(role)
         return jsonify({"success":False, "message":"account is not an admin"})
     
     # Checks if the username exists
