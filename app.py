@@ -1,5 +1,5 @@
 # Imports
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, url_for
 from flask_cors import CORS
 from hashlib import sha512
 from random import choice
@@ -9,7 +9,7 @@ from SQL import SQL
 
 # Creates the flask application 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins="http://localhost:5173", supports_credentials=True)
 
 # Creates the db object based on the SQL class
 db = SQL()
@@ -43,7 +43,7 @@ def passwordHashing(password, iterations=1, salt=""):
     
 
 # Returns true if the session is valid, 0 if otherwise
-def verifySession(sessionID):
+def checkSession(sessionID):
     # Checks if the session exists
     session = db.getData("SELECT sessionID, endDate FROM sessions WHERE sessionID = %s", (sessionID,))
     if session == []:
@@ -131,15 +131,23 @@ def generatesession():
     endDate = startDate + timedelta(days=1)
     db.manipulateData("INSERT INTO sessions (sessionID, userID, startDate, endDate) VALUES (%s, %s, %s, %s)", (sessionID, userID, startDate, endDate,))
     
-    return jsonify({"success":True, "message":"success"})
+    print(sessionID)
+    return jsonify({"success":True, "session":f"{sessionID}"})
 
+@app.route("/validatesession", methods=["POST"])
+def validatesession():
+    sessionID = request.json.get("sessionID")
+    print(sessionID)
+    if not checkSession(sessionID):
+        return jsonify({"success":False, "message":"invalid session"})
+    return jsonify({"success":True})
 
 # Updates the password within the database
 @app.route("/updatepassword", methods=["POST"])
 def updatepassword():
     # Gets the current sessionID and checks it against the database
     session = request.json.get("sessionID")
-    if not verifySession(session):
+    if not checkSession(session):
         return jsonify({"success":False, "message":"invalid session"})
     
     # Finds the current username from the sessionID and checks if the user entered password matches their current password
@@ -177,6 +185,7 @@ def assignadmin():
     db.manipulateData("UPDATE users SET roleID = %s WHERE username = %s", (1, newAdminUsername,))
     
     return jsonify({"success":True, "message":"success"})
+
 
 # Main function to run the program
 def main():
