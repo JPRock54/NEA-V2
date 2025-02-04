@@ -1,5 +1,5 @@
 # Imports
-from flask import Flask, request, jsonify, redirect, url_for
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 from hashlib import sha512
 from random import choice
@@ -46,7 +46,7 @@ def passwordHashing(password, iterations=1, salt=""):
 def checkSession(sessionID):
     # Checks if the session exists
     session = db.getData("SELECT sessionID, endDate FROM sessions WHERE sessionID = %s", (sessionID,))
-    if session == []:
+    if session == [] or session is None:
         return False
     
     # Checks if the session has expired

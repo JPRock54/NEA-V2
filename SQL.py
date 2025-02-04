@@ -1,4 +1,5 @@
-from mysql import connector, Error
+from mysql import connector
+from mysql.connector import Error
 from os import getenv
 from dotenv import load_dotenv
 
@@ -18,8 +19,7 @@ class SQL:
             self.connection.database = getenv("DB_NAME")
             self.cursor.close()
         except Error:
-            self.connection = None
-            self.cursor = None
+            pass
 
     def close(self):
         try:
