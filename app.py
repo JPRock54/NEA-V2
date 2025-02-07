@@ -61,8 +61,8 @@ def checkSession(sessionID):
 # Returns True if the username exists, False if otherwise
 def checkUsername(username):
     # Gets the username from the database and checks if its empty
-    username = db.getData("SELECT * FROM users WHERE username = %s", (username, ))
-    if username == []:
+    dbUsername = db.getData("SELECT * FROM users WHERE username = %s", (username, ))
+    if dbUsername == []:
         return False
     
     return True
@@ -97,11 +97,19 @@ def checkFieldExists():
 def createaccount():
     # Gets their username and check if it already exists in the database
     username = request.json.get("username")
+    if len(username) == 0:
+        return jsonify({"success":False, "message":"Username field must not be blank"})
+    elif len(username) < 4:
+        return jsonify({"success":False, "message":"Username must be atleast 4 characters long!"})
     if checkUsername(username):
         return jsonify({"success":False, "message":"Username already exists!"})
 
     # Gets their password, hashes it and adds it to the database
     password = request.json.get("password")
+    if len(password) == 0:
+        return jsonify({"success":False, "message":"Password field must not be blank"})
+    elif len(password) < 8:
+        return jsonify({"success":False, "message":"Password must be atleast 8 characters long!"})
     salt1 = generateRandomString(32)
     hashedPassword = passwordHashing(password, 20, salt1)
     db.manipulateData("INSERT INTO users (username, hashedPassword, salt, roleID) VALUES (%s, %s, %s, %s)", (username, hashedPassword, salt1, 0,))
@@ -113,11 +121,15 @@ def createaccount():
 def generatesession():
     # Checks their username exists
     username = request.json.get("username")
+    if len(username) == 0:
+        return jsonify({"success":False, "message":"Username field must not be blank"})
     if not checkUsername(username):
         return jsonify({"success":False, "message":"Incorrect username/password"})
     
     # Checks if their password is correct
     password = request.json.get("password")
+    if len(password) == 0:
+        return jsonify({"success":False, "message":"Password field must not be blank"})
     if not checkPassword(username, password):
         return jsonify({"success":False, "message":"Incorrect username/password"})
 
@@ -137,7 +149,6 @@ def generatesession():
 @app.route("/validatesession", methods=["POST"])
 def validatesession():
     sessionID = request.json.get("sessionID")
-    print(sessionID)
     if not checkSession(sessionID):
         return jsonify({"success":False, "message":"invalid session"})
     return jsonify({"success":True})
