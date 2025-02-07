@@ -142,6 +142,16 @@ def validatesession():
         return jsonify({"success":False, "message":"invalid session"})
     return jsonify({"success":True})
 
+
+@app.route("/getusername", methods=["POST"])
+def getusername():
+    session = request.json.get("sessionID")
+    if not checkSession(session):
+        return jsonify({"success":False, "message":"invalid session"})
+    
+    username = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
+    return jsonify({"success":True, "username":username})
+
 # Updates the password within the database
 @app.route("/updatepassword", methods=["POST"])
 def updatepassword():
