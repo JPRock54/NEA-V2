@@ -208,6 +208,24 @@ def assignadmin():
     return jsonify({"success":True, "message":"success"})
 
 
+@app.route("/tables", methods=["GET"])
+def getTables():
+    tables = db.getTables()
+    return jsonify([table[0] for table in tables])
+
+# Route to get data from a specific table
+@app.route('/data/<tableName>', methods=['GET'])
+def get_table_data(tableName):
+    tables = db.getTables()
+    tableNames = [table[0] for table in tables]
+    if tableName not in tableNames:
+        print("RAPE")
+        return jsonify("")
+    query = db.getData(f"SELECT * FROM {tableName}", returnColumnNames=True)
+    print(query)
+    return jsonify(query)
+
+
 # Main function to run the program
 def main():
     app.run(debug=True)

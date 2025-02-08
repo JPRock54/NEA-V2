@@ -37,15 +37,25 @@ class SQL:
         except Error:
             pass
 
-    def getData(self, statement : str, values : tuple|list = []):
+    def getData(self, statement : str, values : tuple|list = [], returnColumnNames = False):
         try:
             connection = self.pool.get_connection()
             cursor = connection.cursor()
             cursor.execute(statement, values)
-            data = cursor.fetchall()
+            rows = cursor.fetchall()
+            
+            if returnColumnNames:
+                columnNames = [desc[0] for desc in cursor.description]
+                result = []
+                for row in rows:
+                    result.append(dict(zip(columnNames, row))) 
+                cursor.close()
+                connection.close()
+                return result
+            
             cursor.close()
             connection.close()
-            return data
+            return rows
         except Error:
             return None
 
@@ -58,4 +68,16 @@ class SQL:
             cursor.close()
             connection.close()
         except Error:
+            pass
+    
+    def getTables(self):
+        try:
+            connection = self.pool.get_connection()
+            cursor = connection.cursor()
+            cursor.execute("SHOW TABLES")
+            tables = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            return tables
+        except:
             pass
