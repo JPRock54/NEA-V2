@@ -355,6 +355,10 @@ def assignadmin():
     # Checks if the username exists
     if not checkUsername(newAdminUsername):
         return jsonify({"success":False, "message":"Username does not exist"})
+
+    if checkRole(newAdminUsername) == "Admin":
+        return jsonify({"success":False, "message":"User is already an admin"})
+
     db.manipulateData("UPDATE users SET roleID = %s WHERE username = %s", (1, newAdminUsername,))
     
     return jsonify({"success":True, "message":"Assigned user as admin"})
