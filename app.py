@@ -240,13 +240,15 @@ def assignadmin():
 @app.route("/tables", methods=["GET"])
 def getTables():
     tables = db.getTables()
-    return jsonify([table[0] for table in tables])
+    excluded_tables = ['sessions', 'users', 'roles']
+    return jsonify([table[0] for table in tables if table[0] not in excluded_tables])
 
 # Route to get data from a specific table
 @app.route('/data/<tableName>', methods=['GET'])
 def getTableData(tableName):
     tables = db.getTables()
-    tableNames = [table[0] for table in tables]
+    excluded_tables = ['sessions', 'users', 'roles']
+    tableNames = [table[0] for table in tables if table[0] not in excluded_tables]
     if tableName not in tableNames:
         print("RAPE")
         return jsonify("")
