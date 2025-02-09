@@ -153,6 +153,14 @@ def validatesession():
         return jsonify({"success":False, "message":"invalid session"})
     return jsonify({"success":True})
 
+@app.route("/validateadmin", methods=["POST"])
+def validateadmin():
+    sessionID = request.json.get("sessionID")
+    username = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (sessionID,))[0][0]
+    if checkRole(username) == "User":
+        return jsonify({"success":False})
+    return jsonify({"success":True})
+
 
 @app.route("/getusername", methods=["POST"])
 def getusername():
