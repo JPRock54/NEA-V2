@@ -215,15 +215,61 @@ def getTables():
 
 # Route to get data from a specific table
 @app.route('/data/<tableName>', methods=['GET'])
-def get_table_data(tableName):
+def getTableData(tableName):
     tables = db.getTables()
     tableNames = [table[0] for table in tables]
     if tableName not in tableNames:
         print("RAPE")
         return jsonify("")
     query = db.getData(f"SELECT * FROM {tableName}", returnColumnNames=True)
-    print(query)
     return jsonify(query)
+
+@app.route('/updatetables', methods=['POST'])
+def update_table_data():
+    primaryKeyMapping = {
+    "categories" : "categoryID",
+    "classes" : "classID",
+    "items" : "itemID",
+    "roles" : "roleID",
+    "suppliers" : "supplierID"
+    }
+
+    
+
+    data = request.get_json()  # Get the JSON data from the request
+    session = data['sessionID']
+    primaryKeyValue = data['primaryKey']
+    column = data['column']
+    newValue = data['value']
+    tableName = data['tableName']
+    primaryKey = primaryKeyMapping[tableName]
+
+    print(primaryKeyValue)
+    if not checkSession(session):
+        return jsonify({"success":False, "message":"invalid session"})
+    
+    requiredRoleID = db.getData(f"SELECT requiredRoleID FROM {tableName} WHERE {primaryKey} = %s", (primaryKeyValue,))[0][0]
+    currentRoleID = db.getData("SELECT roleID FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
+
+    if newValue == "":
+        print("value error")
+        return jsonify({"success":False})
+
+    if column == "requiredRoleID" and currentRoleID != 1:
+        print("coumn error")
+        return jsonify({"success": False, "message":"Cannot change this field"})
+
+    if currentRoleID is not None and int(currentRoleID) < int(requiredRoleID):
+        print("role error")
+        return jsonify({"success": False, "message":"Invalid permissions"})
+
+    print(column)
+    print(primaryKey)
+    print(primaryKeyValue)
+    db.manipulateData(f"UPDATE {tableName} SET {column} = %s WHERE {primaryKey} = %s", (newValue, primaryKeyValue))
+    print("success")
+    return jsonify({"success": True, "message": "Tables updated successfully"}), 200
+    
 
 
 # Main function to run the program
