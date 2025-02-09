@@ -234,9 +234,7 @@ def update_table_data():
     "suppliers" : "supplierID"
     }
 
-    
-
-    data = request.get_json()  # Get the JSON data from the request
+    data = request.get_json()  
     session = data['sessionID']
     primaryKeyValue = data['primaryKey']
     column = data['column']
@@ -244,7 +242,6 @@ def update_table_data():
     tableName = data['tableName']
     primaryKey = primaryKeyMapping[tableName]
 
-    print(primaryKeyValue)
     if not checkSession(session):
         return jsonify({"success":False, "message":"invalid session"})
     
@@ -252,22 +249,18 @@ def update_table_data():
     currentRoleID = db.getData("SELECT roleID FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
 
     if newValue == "":
-        print("value error")
         return jsonify({"success":False})
 
+    if column == primaryKey:
+        return jsonify({"success": False, "message":"Cannot change this field"})
+    
     if column == "requiredRoleID" and currentRoleID != 1:
-        print("coumn error")
         return jsonify({"success": False, "message":"Cannot change this field"})
 
     if currentRoleID is not None and int(currentRoleID) < int(requiredRoleID):
-        print("role error")
         return jsonify({"success": False, "message":"Invalid permissions"})
 
-    print(column)
-    print(primaryKey)
-    print(primaryKeyValue)
     db.manipulateData(f"UPDATE {tableName} SET {column} = %s WHERE {primaryKey} = %s", (newValue, primaryKeyValue))
-    print("success")
     return jsonify({"success": True, "message": "Tables updated successfully"}), 200
     
 
