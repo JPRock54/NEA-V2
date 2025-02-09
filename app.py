@@ -163,6 +163,15 @@ def getusername():
     username = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
     return jsonify({"success":True, "username":username})
 
+@app.route("/getrole", methods=["POST"])
+def getrole():
+    session = request.json.get("sessionID")
+    if not checkSession(session):
+        return jsonify({"success":False, "message":"invalid session"})
+    
+    role = db.getData("SELECT roleName FROM roles WHERE roleID = (SELECT roleID FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s))", (session,))[0][0]
+    return jsonify({"success":True, "role":role})
+
 # Updates the password within the database
 @app.route("/updatepassword", methods=["POST"])
 def updatepassword():
