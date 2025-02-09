@@ -215,28 +215,6 @@ def updatepassword():
     return jsonify({"success":True, "message":"Password changed", "session":sessionID})
     
 
-# Allows an admin to assign another user as an admin
-@app.route("/admin/assignadmin", methods=["POST"])
-def assignadmin():
-    # Gets the users username based on their current sessionID
-    session = request.json.get("sessionID")
-    adminUsername = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
-    newAdminUsername = request.json.get("username")
-
-
-    # Checks if the current users role is an admin
-    role = checkRole(adminUsername)
-    if role != "Admin":
-        return jsonify({"success":False, "message":"account is not an admin"})
-    
-    # Checks if the username exists
-    if not checkUsername(newAdminUsername):
-        return jsonify({"success":False, "message":"username does not exist"})
-    db.manipulateData("UPDATE users SET roleID = %s WHERE username = %s", (1, newAdminUsername,))
-    
-    return jsonify({"success":True, "message":"success"})
-
-
 @app.route("/tables", methods=["GET"])
 def getTables():
     tables = db.getTables()
@@ -358,7 +336,28 @@ def deleterow():
     return jsonify({"success": True, "message": "success"})
 
     
+# Allows an admin to assign another user as an admin
+@app.route("/admin/assignadmin", methods=["POST"])
+def assignadmin():
+    # Gets the users username based on their current sessionID
+    session = request.json.get("sessionID")
+    adminUsername = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
+    newAdminUsername = request.json.get("username")
 
+    if not checkSession(session):
+        return jsonify({"success": False, "message": "Invalid session"})
+   
+    # Checks if the current users role is an admin
+    role = checkRole(adminUsername)
+    if role != "Admin":
+        return jsonify({"success":False, "message":"Account is not an admin"})
+    
+    # Checks if the username exists
+    if not checkUsername(newAdminUsername):
+        return jsonify({"success":False, "message":"Username does not exist"})
+    db.manipulateData("UPDATE users SET roleID = %s WHERE username = %s", (1, newAdminUsername,))
+    
+    return jsonify({"success":True, "message":"Assigned user as admin"})
 
 # Main function to run the program
 def main():
