@@ -244,8 +244,14 @@ def getTables():
     return jsonify([table[0] for table in tables if table[0] not in excluded_tables])
 
 # Route to get data from a specific table
-@app.route('/data/<tableName>', methods=['GET'])
-def getTableData(tableName):
+@app.route('/gettabledata', methods=['POST'])
+def getTableData():
+    data = request.get_json()
+    sessionID = data.get('sessionID')  
+    if not checkSession(sessionID):
+        return jsonify({"success":False, "message":"invalid session"})
+
+    tableName = data.get('tableName')  
     tables = db.getTables()
     excluded_tables = ['sessions', 'users', 'roles']
     tableNames = [table[0] for table in tables if table[0] not in excluded_tables]
@@ -276,6 +282,12 @@ def update_table_data():
     if not checkSession(session):
         return jsonify({"success":False, "message":"invalid session"})
     
+    tables = db.getTables()
+    excluded_tables = ['sessions', 'users', 'roles']
+    tableNames = [table[0] for table in tables if table[0] not in excluded_tables]
+    if tableName not in tableNames:
+        return jsonify({"success":False})
+
     requiredRoleID = db.getData(f"SELECT requiredRoleID FROM {tableName} WHERE {primaryKey} = %s", (primaryKeyValue,))[0][0]
     currentRoleID = db.getData("SELECT roleID FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
 
@@ -294,8 +306,24 @@ def update_table_data():
     db.manipulateData(f"UPDATE {tableName} SET {column} = %s WHERE {primaryKey} = %s", (newValue, primaryKeyValue))
     return jsonify({"success": True, "message": "Tables updated successfully"}), 200
     
+@app.route('/addrow', methods=['POST'])
+def add_row():
+    data = request.get_json()
+    sessionID = data.get('sessionID')
+    tableName = data.get('tableName')
 
+    tables = db.getTables()
+    excluded_tables = ['sessions', 'users', 'roles']
+    tableNames = [table[0] for table in tables if table[0] not in excluded_tables]
+    if tableName not in tableNames:
+        return jsonify({"success":False})
 
+    # Validate session here (you may have a function for this)
+    if not checkSession(sessionID):
+        return jsonify({"success": False, "message": "Invalid session"})
+
+    db.manipulateData(f"INSERT INTO {tableName} (requiredRoleID) VALUES (0)")
+    return jsonify({"success": True, "message": "success"})
 # Main function to run the program
 def main():
     app.run(debug=True)
