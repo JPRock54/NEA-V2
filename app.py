@@ -178,21 +178,41 @@ def updatepassword():
     # Gets the current sessionID and checks it against the database
     session = request.json.get("sessionID")
     if not checkSession(session):
-        return jsonify({"success":False, "message":"invalid session"})
+        return jsonify({"success":False, "message":"Invalid session"})
     
     # Finds the current username from the sessionID and checks if the user entered password matches their current password
     username = db.getData("SELECT username FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (session,))[0][0]
     currentPassword = request.json.get("currentPassword")
+
     if not checkPassword(username, currentPassword):
-        return jsonify({"success":False, "message":"incorrect current password"})
+        return jsonify({"success":False, "message":"Incorrect current password"})
     
     # Takes the new password from the user and updates it in the database
     newPassword = request.json.get("newPassword")
+    if len(newPassword) == 0:
+        return jsonify({"success":False, "message":"New password field must not be blank"})
+    elif len(newPassword) < 8:
+        return jsonify({"success":False, "message":"New password must be atleast 8 characters long!"})
+    elif newPassword == currentPassword:
+        return jsonify({"success":False, "message":"New password must be different!"})
+
     salt = db.getData("SELECT salt FROM users WHERE username = %s", (username,))[0][0]
     hashedNewPassword = passwordHashing(newPassword, 20, salt)
     db.manipulateData("UPDATE users SET hashedPassword = %s WHERE username = %s", (hashedNewPassword, username))
     
-    return jsonify({"success":True, "message":"password changed"})
+
+    userID = db.getData("SELECT userID FROM sessions WHERE sessionID = %s", (session,))[0][0]
+    # Deletes all other sessions
+    db.manipulateData("DELETE FROM sessions WHERE userID = %s", (userID,))
+
+
+    # Generates a new session with their new password
+    sessionID = generateRandomString(64, False)
+    startDate = datetime.now()
+    endDate = startDate + timedelta(days=1)
+    db.manipulateData("INSERT INTO sessions (sessionID, userID, startDate, endDate) VALUES (%s, %s, %s, %s)", (sessionID, userID, startDate, endDate,))
+
+    return jsonify({"success":True, "message":"Password changed", "session":sessionID})
     
 
 # Allows an admin to assign another user as an admin
