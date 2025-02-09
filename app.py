@@ -258,8 +258,10 @@ def getTableData():
     if tableName not in tableNames:
         print("RAPE")
         return jsonify("")
+    
     query = db.getData(f"SELECT * FROM {tableName}", returnColumnNames=True)
-    return jsonify(query)
+    rowCount = db.getData(f"SELECT COUNT(*) FROM {tableName}")
+    return jsonify({"data":query, "rowCount":rowCount})
 
 @app.route('/updatetables', methods=['POST'])
 def update_table_data():
@@ -322,6 +324,7 @@ def add_row():
     if not checkSession(sessionID):
         return jsonify({"success": False, "message": "Invalid session"})
 
+
     db.manipulateData(f"INSERT INTO {tableName} (requiredRoleID) VALUES (0)")
     return jsonify({"success": True, "message": "success"})
 
@@ -344,6 +347,12 @@ def deleterow():
     if not checkSession(sessionID):
         return jsonify({"success": False, "message": "Invalid session"})
     
+
+    requiredRoleID = db.getData(f"SELECT requiredRoleID FROM {tableName} WHERE {primaryKey} = %s", (primaryKeyValue,))[0][0]
+    currentRoleID = db.getData("SELECT roleID FROM users WHERE userID = (SELECT userID FROM sessions WHERE sessionID = %s)", (sessionID,))[0][0]
+
+    if currentRoleID is not None and int(currentRoleID) < int(requiredRoleID):
+        return jsonify({"success": False, "message":"Invalid permissions"})
 
     db.manipulateData(f"DELETE FROM {tableName} WHERE {primaryKey} = %s", (primaryKeyValue,))
     return jsonify({"success": True, "message": "success"})
