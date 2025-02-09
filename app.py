@@ -324,6 +324,33 @@ def add_row():
 
     db.manipulateData(f"INSERT INTO {tableName} (requiredRoleID) VALUES (0)")
     return jsonify({"success": True, "message": "success"})
+
+@app.route('/deleterow', methods=['POST'])
+def deleterow():
+    primaryKeyMapping = {
+    "categories" : "categoryID",
+    "classes" : "classID",
+    "items" : "itemID",
+    "roles" : "roleID",
+    "suppliers" : "supplierID"
+    }
+
+    data = request.get_json()
+    sessionID = data.get('sessionID')
+    tableName = data.get('tableName')
+    primaryKeyValue = data.get('primaryKey')
+    primaryKey = primaryKeyMapping[tableName]
+
+    if not checkSession(sessionID):
+        return jsonify({"success": False, "message": "Invalid session"})
+    
+
+    db.manipulateData(f"DELETE FROM {tableName} WHERE {primaryKey} = %s", (primaryKeyValue,))
+    return jsonify({"success": True, "message": "success"})
+
+    
+
+
 # Main function to run the program
 def main():
     app.run(debug=True)
