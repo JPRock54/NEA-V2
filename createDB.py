@@ -31,20 +31,88 @@ def createTable(tableName : str, fields : str):
         print(f"Succesfully created table {tableName}")
     
 
-# Main function to run the program
-def main():
-    # Creates all the tables
-    createTable("roles", "roleID INT PRIMARY KEY, roleName VARCHAR(255) NOT NULL")
-    createTable("users", "userID INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL, hashedPassword VARCHAR(255) NOT NULL, salt VARCHAR(255) NOT NULL, roleID INT NOT NULL, FOREIGN KEY (roleID) REFERENCES roles(roleID)")
-    createTable("sessions", "sessionID VARCHAR(255) PRIMARY KEY, userID INT NOT NULL, startDate DATETIME NOT NULL, endDate DATETIME NOT NULL, FOREIGN KEY (userID) REFERENCES users(userID)")
-    createTable("classes", "classID INT AUTO_INCREMENT PRIMARY KEY, classRoom INT, classSubject VARCHAR(255), requiredRoleID INT, FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)")
-    createTable("suppliers", "supplierID INT AUTO_INCREMENT PRIMARY KEY, supplierName VARCHAR(255), supplierEmail VARCHAR(255), supplierPhone VARCHAR(255), supplierAddress VARCHAR(255), requiredRoleID INT, FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)")
-    createTable("categories", "categoryID INT AUTO_INCREMENT PRIMARY KEY, categoryName VARCHAR(255), categoryDescription VARCHAR(255), requiredRoleID INT, FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)")
-    createTable("items", "itemID INT AUTO_INCREMENT PRIMARY KEY, itemName VARCHAR(255), categoryID INT, stockAmount INT, itemPrice FLOAT, classID INT, supplierID INT, requiredRoleID INT, FOREIGN KEY (categoryID) REFERENCES categories(categoryID), FOREIGN KEY (classID) REFERENCES classes(classID), FOREIGN KEY (supplierID) REFERENCES suppliers(supplierID), FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)")
+def createDefaultTables():
+# Creates all the tables
+    createTable("roles", """
+        roleID INT PRIMARY KEY, 
+        roleName VARCHAR(255) NOT NULL
+    """)
     
+    createTable("users", """
+        userID INT AUTO_INCREMENT PRIMARY KEY, 
+        username VARCHAR(255) NOT NULL, 
+        hashedPassword VARCHAR(255) NOT NULL, 
+        salt VARCHAR(255) NOT NULL, 
+        roleID INT NOT NULL, 
+        
+        FOREIGN KEY (roleID) REFERENCES roles(roleID)
+    """)
+    
+    createTable("sessions", """
+        sessionID VARCHAR(255) PRIMARY KEY, 
+        userID INT NOT NULL, 
+        startDate DATETIME NOT NULL, 
+        endDate DATETIME NOT NULL, 
+        
+        FOREIGN KEY (userID) REFERENCES users(userID)
+        """)
+    
+    createTable("classes", """
+        classID INT AUTO_INCREMENT PRIMARY KEY, 
+        classRoom INT, 
+        classSubject VARCHAR(255), 
+        requiredRoleID INT, 
+        
+        FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
+    """)
+    
+    createTable("suppliers", """
+        supplierID INT AUTO_INCREMENT PRIMARY KEY, 
+        supplierName VARCHAR(255), 
+        supplierEmail VARCHAR(255), 
+        supplierPhone VARCHAR(255), 
+        supplierAddress VARCHAR(255), 
+        requiredRoleID INT, 
+        
+        FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
+    """)
+    
+    createTable("categories", """
+        categoryID INT AUTO_INCREMENT PRIMARY KEY, 
+        categoryName VARCHAR(255), 
+        categoryDescription VARCHAR(255), 
+        requiredRoleID INT, 
+        
+        FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
+    """)
+    
+    createTable("items", """
+        itemID INT AUTO_INCREMENT PRIMARY KEY, 
+        itemName VARCHAR(255), 
+        categoryID INT, 
+        stockAmount INT, 
+        itemPrice FLOAT, 
+        classID INT, 
+        supplierID INT, 
+        requiredRoleID INT, 
+
+        FOREIGN KEY (categoryID) REFERENCES categories(categoryID), 
+        FOREIGN KEY (classID) REFERENCES classes(classID), 
+        FOREIGN KEY (supplierID) REFERENCES suppliers(supplierID), 
+        FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
+    """)
+    
+def addDefaultValues():
     # Adds default values to neccessary tables
     db.manipulateData("INSERT INTO roles (roleID, roleName) VALUES (%s, %s)", (0, "User"))
     db.manipulateData("INSERT INTO roles (roleID, roleName) VALUES (%s, %s)", (1, "Admin"))
+
+# Main function to run the program
+def main():
+    # Creates all tables and add default values
+    createDefaultTables()
+    addDefaultValues()    
+    
 
 # Run program
 if __name__ == "__main__":
