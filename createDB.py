@@ -30,9 +30,8 @@ def createTable(tableName : str, fields : str):
         db.create(f"CREATE TABLE IF NOT EXISTS {tableName} ({fields})")
         print(f"Succesfully created table {tableName}")
     
-
-def createDefaultTables():
 # Creates all the tables
+def createDefaultTables():
     createTable("roles", """
         roleID INT PRIMARY KEY, 
         roleName VARCHAR(255) NOT NULL
