@@ -57,27 +57,27 @@ def createDefaultTables():
         """)
     
     createTable("suppliers", """
-        supplierID INT AUTO_INCREMENT PRIMARY KEY, 
+        supplierID INT(4) AUTO_INCREMENT PRIMARY KEY, 
         supplierName VARCHAR(255), 
         supplierEmail VARCHAR(255), 
         supplierPhone VARCHAR(255), 
         supplierAddress VARCHAR(255), 
-        requiredRoleID INT, 
+        requiredRoleID INT(4), 
         
         FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
     """)
 
     createTable("categories", """
-            categoryID INT AUTO_INCREMENT PRIMARY KEY, 
+            categoryID INT(4) AUTO_INCREMENT PRIMARY KEY, 
             categoryName VARCHAR(255), 
             categoryDescription VARCHAR(255), 
-            requiredRoleID INT, 
+            requiredRoleID INT(4), 
             
             FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
         """)
 
     createTable("classes", """
-        classID INT AUTO_INCREMENT PRIMARY KEY, 
+        classID INT(4) AUTO_INCREMENT PRIMARY KEY, 
         classRoom INT(4), 
         classSubject VARCHAR(255), 
         requiredRoleID INT(4), 
@@ -86,14 +86,14 @@ def createDefaultTables():
     """)
     
     createTable("items", """
-        itemID INT AUTO_INCREMENT PRIMARY KEY, 
+        itemID INT(4) AUTO_INCREMENT PRIMARY KEY, 
         itemName VARCHAR(255), 
-        categoryID INT, 
-        stockAmount INT, 
-        itemPrice FLOAT, 
-        classID INT, 
-        supplierID INT, 
-        requiredRoleID INT, 
+        categoryID INT(4), 
+        stockAmount INT(4), 
+        itemPrice FLOAT(4), 
+        classID INT(4), 
+        supplierID INT(4), 
+        requiredRoleID INT(4), 
 
         FOREIGN KEY (categoryID) REFERENCES categories(categoryID), 
         FOREIGN KEY (classID) REFERENCES classes(classID), 
