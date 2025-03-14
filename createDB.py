@@ -33,37 +33,28 @@ def createTable(tableName : str, fields : str):
 # Creates all the tables
 def createDefaultTables():
     createTable("roles", """
-        roleID INT PRIMARY KEY, 
+        roleID INT(4) PRIMARY KEY, 
         roleName VARCHAR(255) NOT NULL
     """)
     
     createTable("users", """
-        userID INT AUTO_INCREMENT PRIMARY KEY, 
+        userID INT(4) AUTO_INCREMENT PRIMARY KEY, 
         username VARCHAR(255) NOT NULL, 
         hashedPassword VARCHAR(255) NOT NULL, 
         salt VARCHAR(255) NOT NULL, 
-        roleID INT NOT NULL, 
+        roleID INT(4) NOT NULL, 
         
         FOREIGN KEY (roleID) REFERENCES roles(roleID)
     """)
     
     createTable("sessions", """
         sessionID VARCHAR(255) PRIMARY KEY, 
-        userID INT NOT NULL, 
-        startDate DATETIME NOT NULL, 
-        endDate DATETIME NOT NULL, 
+        userID INT(4) NOT NULL, 
+        startDate DATETIME(6) NOT NULL, 
+        endDate DATETIME(6) NOT NULL, 
         
         FOREIGN KEY (userID) REFERENCES users(userID)
         """)
-    
-    createTable("classes", """
-        classID INT AUTO_INCREMENT PRIMARY KEY, 
-        classRoom INT, 
-        classSubject VARCHAR(255), 
-        requiredRoleID INT, 
-        
-        FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
-    """)
     
     createTable("suppliers", """
         supplierID INT AUTO_INCREMENT PRIMARY KEY, 
@@ -75,12 +66,21 @@ def createDefaultTables():
         
         FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
     """)
-    
+
     createTable("categories", """
-        categoryID INT AUTO_INCREMENT PRIMARY KEY, 
-        categoryName VARCHAR(255), 
-        categoryDescription VARCHAR(255), 
-        requiredRoleID INT, 
+            categoryID INT AUTO_INCREMENT PRIMARY KEY, 
+            categoryName VARCHAR(255), 
+            categoryDescription VARCHAR(255), 
+            requiredRoleID INT, 
+            
+            FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
+        """)
+
+    createTable("classes", """
+        classID INT AUTO_INCREMENT PRIMARY KEY, 
+        classRoom INT(4), 
+        classSubject VARCHAR(255), 
+        requiredRoleID INT(4), 
         
         FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
     """)
