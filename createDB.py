@@ -68,12 +68,12 @@ def createDefaultTables():
     """)
 
     createTable("categories", """
-            categoryID INT(4) AUTO_INCREMENT PRIMARY KEY, 
-            categoryName VARCHAR(255), 
-            categoryDescription VARCHAR(255), 
-            requiredRoleID INT(4), 
-            
-            FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
+        categoryID INT(4) AUTO_INCREMENT PRIMARY KEY, 
+        categoryName VARCHAR(255), 
+        categoryDescription VARCHAR(255), 
+        requiredRoleID INT(4), 
+        
+        FOREIGN KEY (requiredRoleID) REFERENCES roles(roleID)
         """)
 
     createTable("classes", """
