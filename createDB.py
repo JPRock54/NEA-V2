@@ -1,5 +1,6 @@
 # Imports
 from mysql.connector.errors import ProgrammingError
+from app import generateRandomString, hashedPassword
 from SQL import SQL
 
 # Makes database connector based on SQL class
@@ -105,6 +106,10 @@ def addDefaultValues():
     # Adds default values to neccessary tables
     db.manipulateData("INSERT INTO roles (roleID, roleName) VALUES (%s, %s)", (0, "User"))
     db.manipulateData("INSERT INTO roles (roleID, roleName) VALUES (%s, %s)", (1, "Admin"))
+    salt1 = generateRandomString(32)
+    hashedPassword = passwordHashing("admin123", 20, salt1)
+    db.manipulateData("INSERT INTO users (userID, username, hashedPassword, salt, roleID) VALUES (%s, %s, %s, %s, %s)", (1, "admin1", hashedPassword, salt1, 1))
+    
 
 # Main function to run the program
 def main():
