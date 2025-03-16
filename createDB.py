@@ -1,6 +1,6 @@
 # Imports
 from mysql.connector.errors import ProgrammingError
-from function import generateRandomString, hashedPassword
+from function import generateRandomString, passwordHashing
 from SQL import SQL
 
 # Makes database connector based on SQL class

@@ -1,5 +1,9 @@
 # Imports
 from SQL import SQL
+from hashlib import sha512
+from random import choice
+from string import ascii_letters, digits, punctuation
+from datetime import datetime, timedelta
 
 # Creates the db object based on the SQL class
 db = SQL()
