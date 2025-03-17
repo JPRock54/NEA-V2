@@ -20,6 +20,7 @@ def generateRandomString(size, specialCharacters=True):
     for i in range(0, size):
         randomString.append(choice(characters))
     
+    # Joins the list together into a single string.
     return ''.join(randomString)
 
 # Hashes the password and the salt in sha512 format, then rehashes it a set number of times
